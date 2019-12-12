@@ -40,7 +40,7 @@ class UsersController extends AppController{
 - UserMusicSelectorはCakePHPとは切り離しているので、CakePHPのバージョンアップがあっても影響を受けません。
 - ただし UserMusicAdapter は CakePHPとコアレイヤーの橋渡し部分なので、CakePHPのバージョンアップの影響を受けます。
 
-## UserMusicAdapter の実装
+## UserMusicAdapter
 
 その名の通り CakepPHPと Coreプログラムを橋渡しする変換アダプターとなります。
 基本的には CakepPHP のモデルをセットして処理後に Core側のモデルオブジェクトに変換して結果を渡す処理になります。
@@ -96,6 +96,67 @@ final class UserMusicAdapter implements UserMusicPort
             throw new NotFoundException('ユーザーが未登録です。');
         }
         return new User($entity->id, $entity->email, $entity->password, $entity->created, $entity->modified);
+    }
+
+}
+```
+
+## UserMusicSelector
+
+Coreプログラムとなります。CakepPHPからは完全に分離した処理となっています。
+もしバージョンアップがあったとしても、全く影響を受けない様になっています。
+
+
+```php
+<?php
+
+namespace CakeCms\User\Core\UseCase;
+
+use CakeCms\User\Core\Model\Music;
+use CakeCms\User\Core\Model\User;
+use CakeCms\User\Core\Port\UserMusicPort;
+
+final class UserMusicSelector
+{
+    private UserMusicPort $port;
+
+    /**
+     * @param UserMusicPort $port
+     */
+    public function __construct(UserMusicPort $port)
+    {
+        $this->port = $port;
+    }
+
+    public function run(int $userId): ?Music
+    {
+        $user = $this->port->findUser($userId);
+        $music_id = $this->choice_music($user);
+        return $this->port->findMusic($music_id);
+    }
+
+    /**
+     * ユーザー情報（好きなジャンルとか）と時間などの組み合わせで音楽を探す。
+     * 今回はテスト用に現在時間だけで音楽IDを決める
+     * @param User $user
+     * @return int
+     */
+    private function choice_music(User $user): int
+    {
+        //$user 今回は利用しない。
+        $jpn_time = time() + 9 * (60 * 60);//日本時間
+        switch (true) {
+            case date('H', $jpn_time) > 4 && date('H', $jpn_time) < 10:
+                $result = 1;
+                break;
+            case  date('H', $jpn_time) >= 10 && date('H', $jpn_time) < 17:
+                $result = 2;
+                break;
+            default:
+                $result = 3;
+                break;
+        }
+        return $result;
     }
 
 }
