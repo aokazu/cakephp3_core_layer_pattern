@@ -1,19 +1,25 @@
-# CakePHPへのコアレイヤーパターンの適用
+# CakePHPへコアレイヤーパターンの適用
 
-## バージョンアップで困らないためにすること
+## バージョンアップで困らないためにしておきたいこと
 - CakePHPのファイルを軽量にする。
-- アプリケーション独自の実行プログラムは別にしておく
+- アプリケーション独自の実行プログラムは別にしておく。
 
-## コアレイヤーパターンは上記にマッチ
+## コアレイヤーパターン
 - 新原雅司氏が提案しているアプリケーションアーキテクチャパターンの一つ
 - 詳しくは以下のURLを参照してください。
 - https://blog.shin1x1.com/entry/independent-core-layer-pattern
+- 上記を正に実現させる手段として有効。
+- 2019/11/30に開催された「大改修！PHPレガシーコードビフォーアフター」イベントで同氏の発表を聴き大変感銘を受けました。
+- 今回は、その復習も兼ねて文書にまとめてみました。
 
 
 ## コアレイヤーパターンを恐れずに簡単に言いうと
-- プラグにモデルをセットし実行プログラムに差し込んで動かす。
+- 変換プラグにCakeのモデルをセットしコアプログラムに差し込んで処理をするということ。
+
 
 ### 例）ユーザーに最適な音楽を抽出する
+
+CakePHP側のUsersコントローラーに書き加えた例です。
 
 ```php
 class UsersController extends AppController{
@@ -36,9 +42,9 @@ class UsersController extends AppController{
 
 }
 ```
-- 何がやりたいかパッと見てわかると思いませんか？
+- 何がやりたいかパッと見てわかるプログラムになっています。
 - UserMusicSelectorはCakePHPとは切り離しているので、CakePHPのバージョンアップがあっても影響を受けません。
-- ただし UserMusicAdapter は CakePHPとコアレイヤーの橋渡し部分なので、CakePHPのバージョンアップの影響を受けます。
+- しかしながらUserMusicAdapter は CakePHPとコアレイヤーの橋渡し部分なのでバージョンアップの影響を受けます。
 
 ## UserMusicAdapter
 
@@ -47,24 +53,6 @@ class UsersController extends AppController{
 
 
 ```php
-<?php
-
-namespace CakeCms\User\Application\Adapter;
-
-
-use App\Model\Table\MusicsTable;
-use App\Model\Table\UsersTable;
-use CakeCms\User\Core\Exception\NotFoundException;
-use CakeCms\User\Core\Model\Music;
-use CakeCms\User\Core\Model\User;
-use CakeCms\User\Core\Port\UserMusicPort;
-
-$core_dir = dirname(__FILE__).'/../../Core';
-require_once($core_dir.'/Model/Music.php');
-require_once($core_dir.'/Model/User.php');
-require_once($core_dir.'/Port/UserMusicPort.php');
-
-
 final class UserMusicAdapter implements UserMusicPort
 {
     private UsersTable $Users;
@@ -108,14 +96,6 @@ Coreプログラムとなります。CakepPHPからは完全に分離した処�
 
 
 ```php
-<?php
-
-namespace CakeCms\User\Core\UseCase;
-
-use CakeCms\User\Core\Model\Music;
-use CakeCms\User\Core\Model\User;
-use CakeCms\User\Core\Port\UserMusicPort;
-
 final class UserMusicSelector
 {
     private UserMusicPort $port;
@@ -161,3 +141,38 @@ final class UserMusicSelector
 
 }
 ```
+
+## Coreプログラムのテスト
+
+CakePHPの影響は全く受けない PHPUnit テストも可能になります。
+
+```php
+use PHPUnit\Framework\TestCase;
+
+final class UserMusicSelectorTest extends TestCase
+{
+    /**
+     * @test
+     */
+    public function start()
+    {
+        $adapter = new class implements UserMusicPort {
+            public function findUser(int $id): ?User
+            {
+                return new User(1,'hoge@hoge.com','password','2019/12/11 10:00:00','2019/12/11 10:10:10');
+            }
+
+            public function findMusic(int $id): ?Music
+            {
+                return new Music(1,'朝のボサノバ','ラテン','2019/12/11 10:00:00','2019/12/11 10:10:10');
+            }
+        };
+        $sut = new UserMusicSelector($adapter);
+        $music = $sut->run(1);
+        $this->assertSame($music->getTitle(), '朝のボサノバ');
+    }
+}
+
+```
+
+
