@@ -1,7 +1,7 @@
 # CakePHPへコアレイヤーパターンの適用
 
-2019/11/30に開催された「大改修！PHPレガシーコードビフォーアフター」イベントで新原雅司氏の「コアレイヤーパターン」発表を聴き大変感銘を受けました。
-その復習も兼ねて文書にまとめてみました。
+2019/11/30に開催された「大改修！PHPレガシーコードビフォーアフター」イベントで新原雅司氏の「コアレイヤーパターン」の発表を聴き大変感銘を受けました。
+その復習も兼ねて実際のプラグラムを作成し文書にまとめてみました。
 
 
 ## バージョンアップで困らないためにしておきたいこと
@@ -44,8 +44,8 @@ class UsersController extends AppController{
 
 }
 ```
-- 何がやりたいかパッと見てわかるプログラムになっています。
-- UserMusicSelectorはCakePHPとは切り離しているので、CakePHPのバージョンアップがあっても影響を受けません。
+- コアレイヤーパターンを適用すると何がやりたいかパッと見てわかるプログラムになります。
+- UserMusicSelectorはCakePHPとは切り離されているので、CakePHPのバージョンアップがあっても影響を受けません。
 - しかしながらUserMusicAdapter は CakePHPとコアレイヤーの橋渡し部分なのでバージョンアップの影響を受けます。
 
 ## UserMusicAdapter
@@ -176,3 +176,35 @@ final class UserMusicSelectorTest extends TestCase
 }
 
 ```
+
+## 今回のソースコード
+
+- GitHubにソースコードをアップしました。
+- https://github.com/aokazu/cakephp3_core_layer_pattern
+
+## 環境構築方法
+
+Dockerの利用が初めてなので、もっと簡単にできるのだとは思いますが現状では以下の通りです。
+
+1. WEB側はCakePHPをインストール後に src をGitHubから取得して入れ替え
+```sh
+git clone https://github.com/aokazu/cakephp3_core_layer_pattern.git
+```
+2. src と同じ階層に packages を配置
+3. packages 配下に /CakeCms/User/を配置してください。
+4. DBサーバーはDockerか取得して起動  
+```sh
+docker pull aokikazuyuki/clp_db
+docker start clp_db
+```
+5. CakePHPのルートフォルダに移動してWEBサーバー起動  
+```sh
+./bin/cake server
+```
+6. 動作確認 URL にアクセス（http://localhost:8765/Users/selectMusic/1）
+
+
+## まとめ
+
+クラス定義やファイルの読み込みが多数発生しますのでディレクトリ構造をよく理解していない間は動かすのに苦労しました。
+実際の現場に適用するには時間がものすごく係ると思いますが、出来るところからコツコツと積み上げて行くしか無いですね。
