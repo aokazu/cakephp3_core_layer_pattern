@@ -13,6 +13,7 @@
 - 新原雅司氏が提案しているアプリケーションアーキテクチャパターンの一つ
 - 詳しくは以下のURLを参照してください。
 - https://blog.shin1x1.com/entry/independent-core-layer-pattern
+- https://speakerdeck.com/shin1x1/fortee-meets-independent-core-layer-pattern
 
 
 ## コアレイヤーパターンを恐れずに簡単に言いうと
