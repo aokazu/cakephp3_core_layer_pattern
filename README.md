@@ -191,8 +191,8 @@ Dockerの利用が初めてなので、もっと簡単にできるのだとは�
 git clone https://github.com/aokazu/cakephp3_core_layer_pattern.git
 ```
 2. src と同じ階層に packages を配置
-3. packages 配下に /CakeCms/User/を配置してください。
-4. DBサーバーはDockerか取得して起動  
+3. config/app.php を上書き
+4. DBサーバーはDockerから取得して起動  
 ```sh
 docker pull aokikazuyuki/clp_db
 docker start clp_db
